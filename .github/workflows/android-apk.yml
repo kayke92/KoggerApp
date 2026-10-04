@@ -28,19 +28,19 @@ jobs:
         run: |
           aqt install-qt linux desktop 6.8.3 linux_gcc_64 \
             --outputdir "$HOME/Qt" \
-            -m qtmultimedia qtpositioning qtserialport
+            -m qtmultimedia qtpositioning qtserialport qtlocation qtgraphs qtquick3d qtvirtualkeyboard qt5compat qtimageformats
 
       - name: Install Qt 6.8.3 for Android ARM64
         run: |
           aqt install-qt linux android 6.8.3 android_arm64_v8a \
             --outputdir "$HOME/Qt" \
-            -m qtmultimedia qtpositioning qtserialport
+            -m qtmultimedia qtpositioning qtserialport qtlocation qtgraphs qtquick3d qtvirtualkeyboard qt5compat qtimageformats
 
       - name: Install Qt 6.8.3 for Android ARMv7
         run: |
           aqt install-qt linux android 6.8.3 android_armv7 \
             --outputdir "$HOME/Qt" \
-            -m qtmultimedia qtpositioning qtserialport
+            -m qtmultimedia qtpositioning qtserialport qtlocation qtgraphs qtquick3d qtvirtualkeyboard qt5compat qtimageformats
 
       - name: Use preinstalled Android SDK
         run: |

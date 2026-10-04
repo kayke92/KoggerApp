@@ -78,14 +78,13 @@ jobs:
           keytool -genkeypair -keystore "$RUNNER_TEMP/carpcatcher-release.jks" -storepass android -keypass android -alias carpcatcher -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Carpcatcher Control"
           "$ANDROID_HOME/build-tools/35.0.0/zipalign" -f -p 4 "$unsigned_apk" "$RUNNER_TEMP/aligned.apk"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign --ks "$RUNNER_TEMP/carpcatcher-release.jks" --ks-pass pass:android --key-pass pass:android --out "$RUNNER_TEMP/Carpcatcher-Kogger-release.apk" "$RUNNER_TEMP/aligned.apk"
-          mkdir -p out-android
-          cp "$RUNNER_TEMP/Carpcatcher-Kogger-release.apk" out-android/
 
-      - name: Collect APK
+      - name: Verify and collect signed APK
         run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$RUNNER_TEMP/Carpcatcher-Kogger-release.apk"
+          rm -rf out-android
           mkdir -p out-android
-          find build-android -type f -name '*.apk' -print -exec cp '{}' out-android/ \;
-          test -n "$(find out-android -type f -name '*.apk' -print -quit)"
+          cp "$RUNNER_TEMP/Carpcatcher-Kogger-release.apk" out-android/Carpcatcher-Kogger-release.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

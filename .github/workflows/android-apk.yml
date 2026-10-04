@@ -51,10 +51,10 @@ jobs:
             "ndk;27.3.13750724"
 
       - name: Configure Android build
-        env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
-          ANDROID_NDK_ROOT: ${{ env.ANDROID_HOME }}/ndk/27.3.13750724
         run: |
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/27.3.13750724"
+          test -f "$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake"
           sed -i 's/armeabi-v7a;arm64-v8a/arm64-v8a/' CMakeLists.txt
           cmake -S . -B build-android -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
@@ -66,10 +66,10 @@ jobs:
             -DQT_ANDROID_ABIS="arm64-v8a"
 
       - name: Build installable debug APK
-        env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
-          ANDROID_NDK_ROOT: ${{ env.ANDROID_HOME }}/ndk/27.3.13750724
-        run: cmake --build build-android --target apk --parallel 2
+        run: |
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/27.3.13750724"
+          cmake --build build-android --target apk --parallel 2
 
       - name: Collect APK
         run: |

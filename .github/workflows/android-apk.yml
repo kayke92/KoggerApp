@@ -28,13 +28,13 @@ jobs:
         run: |
           aqt install-qt linux desktop 6.8.3 linux_gcc_64 \
             --outputdir "$HOME/Qt" \
-            -m qtmultimedia qtpositioning
+            -m qtmultimedia qtpositioning qtserialport
 
       - name: Install Qt 6.8.3 for Android ARM64
         run: |
           aqt install-qt linux android 6.8.3 android_arm64_v8a \
             --outputdir "$HOME/Qt" \
-            -m qtmultimedia qtpositioning
+            -m qtmultimedia qtpositioning qtserialport
 
       - name: Use preinstalled Android SDK
         run: |

@@ -22,6 +22,7 @@
 #include "point_group.h"
 #include "ray.h"
 #include "navigation_arrow.h"
+#include "waypoint_layer.h"
 //#include "isobaths_view.h"
 #include "ruler_tool.h"
 #include "geojson_layer.h"
@@ -359,6 +360,7 @@ public Q_SLOTS:
 
     // from DataHorizon
     void onPositionAdded(uint64_t indx);
+    void addCarpcatcherWaypoint(double latitude, double longitude);
     void setIsNorth(bool state);
     void setIsUpdateMosaic(bool state);
     void setIsUpdateSurface(bool state);
@@ -428,6 +430,7 @@ private:
     std::shared_ptr<GeoJsonLayer> geoJsonLayer_;
     GeoJsonController* geoJsonController_{nullptr};
     std::shared_ptr<BoatTrack> boatTrack_;
+    std::shared_ptr<WaypointLayer> waypointLayer_;
     std::shared_ptr<BottomTrack> m_bottomTrack;
     std::shared_ptr<PolygonGroup> m_polygonGroup;
     std::shared_ptr<PointGroup> m_pointGroup;

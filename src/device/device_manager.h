@@ -126,6 +126,7 @@ signals:
                              float rollDeg);
     void boatStatusComplete(uint8_t batteryBoatPercent, uint8_t batteryBridgePercent, uint8_t signalQualityBoatPercent, uint8_t signalQualityBridgePercent);
     void attitudeComplete(float yaw, float pitch, float roll);
+    void waypointRequested(double latitude, double longitude);
     void tempComplete(float val);
     void encoderComplete(float e1, float e2, float e3);
     void fileStopsOpening();
@@ -203,6 +204,9 @@ private:
     bool autoDownloadStarted_ = false;
     LocationReader* locReader_{ nullptr };
     bool useGPS_{ false };
+    double lastMavlinkLatitude_{ NAN };
+    double lastMavlinkLongitude_{ NAN };
+    bool waypointPitchReleased_{ true };
 
 private slots:
     void readyReadProxy(Link* link);

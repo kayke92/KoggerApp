@@ -1,4 +1,5 @@
 #include "device_manager.h"
+#include <cmath>
 #include "device_defs.h"
 #include <QDateTime>
 #include "location_reader.h"
@@ -379,10 +380,34 @@ void DeviceManager::frameInput(QUuid uuid, Link* link, Parsers::FrameParser fram
                 if(mavlink_frame.msgId() == MAVLink_MSG_GLOBAL_POSITION_INT::getID()) {
                     MAVLink_MSG_GLOBAL_POSITION_INT pos = mavlink_frame.read<MAVLink_MSG_GLOBAL_POSITION_INT>();
                     if (pos.isValid()) {
+                        lastMavlinkLatitude_ = pos.latitude();
+                        lastMavlinkLongitude_ = pos.longitude();
                         emit positionComplete(pos.latitude(), pos.longitude(), pos.time_boot_msec()/1000, (pos.time_boot_msec()%1000)*1e6);
                         emit gnssVelocityComplete(pos.velocityH(), 0);
                         vru_.velocityH = pos.velocityH();
                         emit vruChanged();
+                    }
+                }
+
+                if (mavlink_frame.msgId() == MAVLink_MSG_RC_CHANNELS::getID()) {
+                    const MAVLink_MSG_RC_CHANNELS channels = mavlink_frame.read<MAVLink_MSG_RC_CHANNELS>();
+                    const uint16_t pitch = channels.pitchRaw();
+
+                    // RCMAP_PITCH=3. Hysteresis guarantees one waypoint per
+                    // deliberate up-and-release movement of the left stick.
+                    if (pitch < 1600) {
+                        waypointPitchReleased_ = true;
+                    }
+                    else if (pitch > 1800 && waypointPitchReleased_
+                             && std::isfinite(lastMavlinkLatitude_)
+                             && std::isfinite(lastMavlinkLongitude_)) {
+                        waypointPitchReleased_ = false;
+                        emit waypointRequested(lastMavlinkLatitude_, lastMavlinkLongitude_);
+#ifndef SEPARATE_READING
+                        core.consoleStreamInfo(QString("Waypoint requested at %1, %2")
+                                                   .arg(lastMavlinkLatitude_, 0, 'f', 7)
+                                                   .arg(lastMavlinkLongitude_, 0, 'f', 7));
+#endif
                     }
                 }
 

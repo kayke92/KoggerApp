@@ -15,6 +15,7 @@
 #include "polygon_group.h"
 #include "scene3d_view.h"
 #include "navigation_arrow.h"
+#include "waypoint_layer.h"
 #include <QMatrix4x4>
 #include "qsystemdetection.h"
 #if !defined(Q_OS_ANDROID) && !defined(LINUX_ES)
@@ -79,6 +80,7 @@ private:
     PolygonGroup::PolygonGroupRenderImplementation m_polygonGroupRenderImpl;
     PointGroup::PointGroupRenderImplementation m_pointGroupRenderImpl;
     BoatTrack::BoatTrackRenderImplementation m_boatTrackRenderImpl;
+    WaypointLayer::WaypointLayerRenderImplementation waypointLayerRenderImpl_;
     NavigationArrow::NavigationArrowRenderImplementation navigationArrowRenderImpl_;
 
     QMatrix4x4 m_model;

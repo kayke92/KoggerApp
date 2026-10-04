@@ -109,6 +109,7 @@ GraphicsScene3dView::GraphicsScene3dView() :
     geoJsonLayer_(std::make_shared<GeoJsonLayer>(this)),
     geoJsonController_(new GeoJsonController(this)),
     boatTrack_(std::make_shared<BoatTrack>(this, this)),
+    waypointLayer_(std::make_shared<WaypointLayer>(this)),
     m_bottomTrack(std::make_shared<BottomTrack>(this, this)),
     m_polygonGroup(std::make_shared<PolygonGroup>()),
     m_pointGroup(std::make_shared<PointGroup>()),
@@ -3409,6 +3410,29 @@ void GraphicsScene3dView::onPositionAdded(uint64_t indx)
     }
 }
 
+void GraphicsScene3dView::addCarpcatcherWaypoint(double latitude, double longitude)
+{
+    if (!datasetPtr_ || !waypointLayer_) {
+        return;
+    }
+
+    const LLARef reference = datasetPtr_->getLlaRef();
+    if (!reference.isInit) {
+        return;
+    }
+
+    const LLA lla(latitude, longitude, 0.0);
+    const NED ned(&lla, &reference);
+    if (!ned.isCoordinatesValid()) {
+        return;
+    }
+
+    const int number = waypointLayer_->data().size() + 1;
+    waypointLayer_->appendWaypoint(QVector3D(ned.n, ned.e, 0.15f),
+                                   QStringLiteral("WP%1").arg(number));
+    update();
+}
+
 void GraphicsScene3dView::setIsNorth(bool state)
 {
     if (isNorth_ == state) {
@@ -3533,6 +3557,7 @@ void GraphicsScene3dView::InFboRenderer::synchronize(QQuickFramebufferObject * f
     m_renderer->compassRenderImpl_       = *(dynamic_cast<CoordinateAxes::CoordinateAxesRenderImplementation*>(view->m_coordAxes->m_renderImpl));
     m_renderer->m_planeGridRenderImpl       = *(dynamic_cast<PlaneGrid::PlaneGridRenderImplementation*>(view->m_planeGrid->m_renderImpl));
     m_renderer->m_boatTrackRenderImpl       = *(dynamic_cast<BoatTrack::BoatTrackRenderImplementation*>(view->boatTrack_->m_renderImpl));
+    m_renderer->waypointLayerRenderImpl_    = *(dynamic_cast<WaypointLayer::WaypointLayerRenderImplementation*>(view->waypointLayer_->m_renderImpl));
     m_renderer->m_bottomTrackRenderImpl     = *(dynamic_cast<BottomTrack::BottomTrackRenderImplementation*>(view->m_bottomTrack->m_renderImpl));
     //m_renderer->isobathsViewRenderImpl_     = *(dynamic_cast<IsobathsView::IsobathsViewRenderImplementation*>(view->isobathsView_->m_renderImpl));
     m_renderer->surfaceViewRenderImpl_      = *(dynamic_cast<SurfaceView::SurfaceViewRenderImplementation*>(view->surfaceView_->m_renderImpl));

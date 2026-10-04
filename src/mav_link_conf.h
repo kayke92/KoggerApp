@@ -575,6 +575,36 @@ struct __attribute__((packed)) MAVLink_MSG_GPS_RAW_INT
 
 };
 
+// MAVLink common message 65. The first eight receiver channels are part of
+// the base payload; channels 9-18 are MAVLink extension fields.
+struct __attribute__((packed)) MAVLink_MSG_RC_CHANNELS
+{
+    uint32_t time_boot_ms;
+    uint16_t chan1_raw;
+    uint16_t chan2_raw;
+    uint16_t chan3_raw;
+    uint16_t chan4_raw;
+    uint16_t chan5_raw;
+    uint16_t chan6_raw;
+    uint16_t chan7_raw;
+    uint16_t chan8_raw;
+    uint8_t chancount;
+    uint8_t rssi;
+    uint16_t chan9_raw;
+    uint16_t chan10_raw;
+    uint16_t chan11_raw;
+    uint16_t chan12_raw;
+    uint16_t chan13_raw;
+    uint16_t chan14_raw;
+    uint16_t chan15_raw;
+    uint16_t chan16_raw;
+    uint16_t chan17_raw;
+    uint16_t chan18_raw;
+
+    static uint32_t getID() { return 65; }
+    uint16_t pitchRaw() const { return chan3_raw; }
+};
+
 struct __attribute__((packed)) MAVLink_MSG_VFR_HUD
 {
     float airspeed; // m/s

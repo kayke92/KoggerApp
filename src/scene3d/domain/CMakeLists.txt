@@ -29,6 +29,7 @@ target_sources(KoggerApp PRIVATE
     isobaths_view.h         isobaths_view.cpp
     triangle.h
     usbl_layer.h            usbl_layer.cpp
+    waypoint_layer.h        waypoint_layer.cpp
     contacts.h              contacts.cpp)
 
 target_include_directories(KoggerApp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

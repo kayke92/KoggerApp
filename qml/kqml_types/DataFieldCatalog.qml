@@ -180,7 +180,15 @@ QtObject {
         case "apCurrent":
             return (dmw && !isNaN(dmw.vruCurrent)) ? (dmw.vruCurrent.toFixed(1) + " A") : "—"
         case "apMode":
-            return (dmw && dmw.pilotModeState >= 0) ? String(dmw.pilotModeState) : "—"
+            if (!dmw || dmw.pilotModeState < 0)
+                return "—"
+            switch (dmw.pilotModeState) {
+            case 0:  return qsTr("MANUAL")
+            case 10: return qsTr("AUTO")
+            case 11: return qsTr("RTL")
+            case 12: return qsTr("SMART RTL")
+            default: return qsTr("MODE") + " " + String(dmw.pilotModeState)
+            }
         case "apArm":
             return (dmw && dmw.pilotArmState >= 0) ? (dmw.pilotArmState > 0 ? "ARMED" : "DISARMED") : "—"
         }

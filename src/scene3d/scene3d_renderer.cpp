@@ -222,6 +222,7 @@ void GraphicsScene3dRenderer::drawObjects()
         //isobathsViewRenderImpl_.render(this,     m_model, view, m_projection, m_shaderProgramMap);
         m_bottomTrackRenderImpl.render(this,     m_model, view, m_projection, m_shaderProgramMap);
         m_boatTrackRenderImpl.render(this,       m_model, view, m_projection, m_shaderProgramMap);
+        waypointLayerRenderImpl_.render(this, m_projection * view * m_model, m_shaderProgramMap);
         glDisable(GL_DEPTH_TEST);
 
         //-----------Contacts-------------

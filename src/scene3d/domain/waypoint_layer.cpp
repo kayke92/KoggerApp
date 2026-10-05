@@ -20,10 +20,27 @@ void WaypointLayer::appendWaypoint(const QVector3D& position, const QString& lab
     Q_EMIT boundsChanged();
 }
 
+void WaypointLayer::setSelectedIndex(int index)
+{
+    auto* render = RENDER_IMPL(WaypointLayer);
+    const int validIndex = (index >= 0 && index < render->data().size()) ? index : -1;
+    if (render->selectedIndex_ == validIndex) {
+        return;
+    }
+    render->selectedIndex_ = validIndex;
+    Q_EMIT changed();
+}
+
+int WaypointLayer::selectedIndex() const
+{
+    return dynamic_cast<const WaypointLayerRenderImplementation*>(m_renderImpl)->selectedIndex_;
+}
+
 void WaypointLayer::clearData()
 {
     auto* render = RENDER_IMPL(WaypointLayer);
     render->labels_.clear();
+    render->selectedIndex_ = -1;
     SceneObject::clearData();
 }
 
@@ -54,12 +71,29 @@ void WaypointLayer::WaypointLayerRenderImplementation::render(
         shader->release();
     }
 
+    if (selectedIndex_ >= 0 && selectedIndex_ < m_data.size() && shader && shader->bind()) {
+        const int posLoc = shader->attributeLocation("position");
+        shader->setUniformValue("matrix", mvp);
+        shader->setUniformValue("color", DrawUtils::colorToVector4d(QColor(0, 220, 255)));
+        shader->setUniformValue("width", m_width + 14.0f);
+        shader->setUniformValue("isPoint", true);
+        shader->setUniformValue("isTriangle", false);
+        shader->enableAttributeArray(posLoc);
+        shader->setAttributeArray(posLoc, &m_data.at(selectedIndex_));
+        ctx->glEnable(34370);
+        ctx->glDrawArrays(GL_POINTS, 0, 1);
+        ctx->glDisable(34370);
+        shader->disableAttributeArray(posLoc);
+        shader->setUniformValue("isPoint", false);
+        shader->release();
+    }
+
     QVector<TextRenderer::Text3DItem> textItems;
     const int count = qMin(m_data.size(), labels_.size());
     textItems.reserve(count);
     for (int i = 0; i < count; ++i) {
         QVector3D textPosition = m_data.at(i) + QVector3D(1.0f, 1.0f, 0.2f);
-        textItems.append({QStringView{labels_.at(i)}, 0.08f, textPosition,
+        textItems.append({QStringView{labels_.at(i)}, 0.045f, textPosition,
                           QVector3D(1.0f, 0.0f, 0.0f)});
     }
 

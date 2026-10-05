@@ -17,10 +17,13 @@ public:
                     const QMap<QString, std::shared_ptr<QOpenGLShaderProgram>>& shaderProgramMap) const override;
 
         QStringList labels_;
+        int selectedIndex_ = -1;
     };
 
     explicit WaypointLayer(QObject* parent = nullptr);
 
     void appendWaypoint(const QVector3D& position, const QString& label);
+    void setSelectedIndex(int index);
+    int selectedIndex() const;
     void clearData() override;
 };

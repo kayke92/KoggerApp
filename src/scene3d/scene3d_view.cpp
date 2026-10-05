@@ -9,6 +9,7 @@
 #include <QVector3D>
 #include <QLineF>
 #include <QDebug>
+#include <QSettings>
 #include <QtGlobal>
 #include "scene3d_renderer.h"
 #include "controllers/ruler_controller.h"
@@ -216,6 +217,7 @@ GraphicsScene3dView::GraphicsScene3dView() :
     });
 
     geoJsonLayer_->setVisible(false);
+    loadSavedWaypoints();
     QObject::connect(boatTrack_.get(), &BoatTrack::changed, this, &QQuickFramebufferObject::update);
     QObject::connect(m_bottomTrack.get(), &BottomTrack::changed, this, &QQuickFramebufferObject::update);
     QObject::connect(m_polygonGroup.get(), &PolygonGroup::changed, this, &QQuickFramebufferObject::update);
@@ -885,6 +887,13 @@ void GraphicsScene3dView::mouseReleaseTrigger(Qt::MouseButtons mouseButton, qrea
     }
 
     if (!wasMoved_ && wasMovedMouseButton_ == Qt::MouseButton::NoButton) {
+        if (mouseButton.testFlag(Qt::LeftButton) && selectWaypointAt(x, y)) {
+            switchedToBottomTrackVertexComboSelectionMode_ = false;
+            wasMoved_ = false;
+            wasMovedMouseButton_ = Qt::MouseButton::NoButton;
+            QQuickFramebufferObject::update();
+            return;
+        }
         m_bottomTrack->resetVertexSelection();
         boatTrack_->clearSelectedEpoch();
         m_bottomTrack->mousePressEvent(Qt::MouseButton::LeftButton, x, y);
@@ -1158,6 +1167,7 @@ void GraphicsScene3dView::resetCameraAngleTrigger()
 void GraphicsScene3dView::forceRefresh()
 {
     forceUpdateDatasetLlaRef();
+    rebuildSavedWaypoints();
     dataZoomIndx_ = -1;
     updateProjection();
     onCameraMoved();
@@ -2518,6 +2528,7 @@ void GraphicsScene3dView::setDataset(Dataset *dataset)
                      this,      [this]() -> void {
                          surfaceView_->setLlaRef(datasetPtr_->getLlaRef());
                          forceUpdateDatasetLlaRef();
+                         rebuildSavedWaypoints();
                          fitAllInView();
                      }, Qt::DirectConnection);
 
@@ -3427,9 +3438,116 @@ void GraphicsScene3dView::addCarpcatcherWaypoint(double latitude, double longitu
         return;
     }
 
-    const int number = waypointLayer_->data().size() + 1;
+    savedWaypoints_.append(qMakePair(latitude, longitude));
+    const int number = savedWaypoints_.size();
     waypointLayer_->appendWaypoint(QVector3D(ned.n, ned.e, 0.15f),
                                    QStringLiteral("WP%1").arg(number));
+    saveWaypoints();
+    update();
+}
+
+int GraphicsScene3dView::selectedWaypointIndex() const
+{
+    return selectedWaypointIndex_;
+}
+
+QString GraphicsScene3dView::selectedWaypointLabel() const
+{
+    return selectedWaypointIndex_ >= 0
+        ? QStringLiteral("WP%1").arg(selectedWaypointIndex_ + 1)
+        : QString();
+}
+
+bool GraphicsScene3dView::selectWaypointAt(qreal x, qreal y)
+{
+    if (!waypointLayer_ || waypointLayer_->cdata().isEmpty() || width() <= 0 || height() <= 0) {
+        return false;
+    }
+
+    const QRect viewport(0, 0, qRound(width()), qRound(height()));
+    const QMatrix4x4 modelView = m_camera->m_view * m_model;
+    const QPointF click(x, y);
+    constexpr qreal hitRadiusPixels = 38.0;
+    int closest = -1;
+    qreal closestDistance = hitRadiusPixels;
+
+    const auto& points = waypointLayer_->cdata();
+    for (int i = 0; i < points.size(); ++i) {
+        const QVector3D projected = points.at(i).project(modelView, m_projection, viewport);
+        const QPointF screen(projected.x(), height() - projected.y());
+        const qreal distance = QLineF(click, screen).length();
+        if (distance <= closestDistance) {
+            closestDistance = distance;
+            closest = i;
+        }
+    }
+
+    if (closest < 0) {
+        return false;
+    }
+
+    selectedWaypointIndex_ = closest;
+    waypointLayer_->setSelectedIndex(closest);
+    saveWaypoints();
+    Q_EMIT selectedWaypointChanged();
+    return true;
+}
+
+void GraphicsScene3dView::loadSavedWaypoints()
+{
+    QSettings settings(QStringLiteral("KOGGER"), QStringLiteral("KoggerApp"));
+    const int count = settings.beginReadArray(QStringLiteral("carpcatcher/waypoints"));
+    savedWaypoints_.clear();
+    savedWaypoints_.reserve(count);
+    for (int i = 0; i < count; ++i) {
+        settings.setArrayIndex(i);
+        const double latitude = settings.value(QStringLiteral("latitude")).toDouble();
+        const double longitude = settings.value(QStringLiteral("longitude")).toDouble();
+        if (std::isfinite(latitude) && std::isfinite(longitude)) {
+            savedWaypoints_.append(qMakePair(latitude, longitude));
+        }
+    }
+    settings.endArray();
+    selectedWaypointIndex_ = settings.value(QStringLiteral("carpcatcher/selectedWaypoint"), -1).toInt();
+    if (selectedWaypointIndex_ < 0 || selectedWaypointIndex_ >= savedWaypoints_.size()) {
+        selectedWaypointIndex_ = -1;
+    }
+}
+
+void GraphicsScene3dView::saveWaypoints() const
+{
+    QSettings settings(QStringLiteral("KOGGER"), QStringLiteral("KoggerApp"));
+    settings.beginWriteArray(QStringLiteral("carpcatcher/waypoints"), savedWaypoints_.size());
+    for (int i = 0; i < savedWaypoints_.size(); ++i) {
+        settings.setArrayIndex(i);
+        settings.setValue(QStringLiteral("latitude"), savedWaypoints_.at(i).first);
+        settings.setValue(QStringLiteral("longitude"), savedWaypoints_.at(i).second);
+    }
+    settings.endArray();
+    settings.setValue(QStringLiteral("carpcatcher/selectedWaypoint"), selectedWaypointIndex_);
+}
+
+void GraphicsScene3dView::rebuildSavedWaypoints()
+{
+    if (!datasetPtr_ || !waypointLayer_) {
+        return;
+    }
+    const LLARef reference = datasetPtr_->getLlaRef();
+    if (!reference.isInit) {
+        return;
+    }
+
+    waypointLayer_->clearData();
+    for (int i = 0; i < savedWaypoints_.size(); ++i) {
+        const LLA lla(savedWaypoints_.at(i).first, savedWaypoints_.at(i).second, 0.0);
+        const NED ned(&lla, &reference);
+        if (ned.isCoordinatesValid()) {
+            waypointLayer_->appendWaypoint(QVector3D(ned.n, ned.e, 0.15f),
+                                           QStringLiteral("WP%1").arg(i + 1));
+        }
+    }
+    waypointLayer_->setSelectedIndex(selectedWaypointIndex_);
+    Q_EMIT selectedWaypointChanged();
     update();
 }
 

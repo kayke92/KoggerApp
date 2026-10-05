@@ -61,6 +61,8 @@ class GraphicsScene3dView : public QQuickFramebufferObject
     Q_PROPERTY(float verticalScale READ verticalScale NOTIFY verticalScaleChanged)
     Q_PROPERTY(int syncLoupeZoom READ syncLoupeZoom NOTIFY syncLoupeStateChanged)
     Q_PROPERTY(bool syncLoupeZoomAdjusting READ syncLoupeZoomAdjusting NOTIFY syncLoupeStateChanged)
+    Q_PROPERTY(int selectedWaypointIndex READ selectedWaypointIndex NOTIFY selectedWaypointChanged)
+    Q_PROPERTY(QString selectedWaypointLabel READ selectedWaypointLabel NOTIFY selectedWaypointChanged)
 
 public:
     //Camera
@@ -361,6 +363,8 @@ public Q_SLOTS:
     // from DataHorizon
     void onPositionAdded(uint64_t indx);
     void addCarpcatcherWaypoint(double latitude, double longitude);
+    int selectedWaypointIndex() const;
+    QString selectedWaypointLabel() const;
     void setIsNorth(bool state);
     void setIsUpdateMosaic(bool state);
     void setIsUpdateSurface(bool state);
@@ -378,6 +382,7 @@ signals:
     void sendVisibleTileKeys(int zoomIndx, const QSet<TileKey>& tileKeys);
     void forceSingleZoomAutoStateChanged(bool active);
     void syncLoupeStateChanged();
+    void selectedWaypointChanged();
     void verticalScaleChanged();
     void followReturnStateChanged();
 
@@ -392,6 +397,10 @@ private:
     bool pickGeoJsonVertex(qreal x, qreal y, QString& outFeatureId, int& outVertexIndex, QVector3D& outWorld) const;
     bool pickGeoJsonSegmentMidpoint(qreal x, qreal y, QString& outFeatureId, int& outInsertIndex, QVector3D& outWorld) const;
     bool pickGeoJsonFeature(qreal x, qreal y, QString& outFeatureId) const;
+    bool selectWaypointAt(qreal x, qreal y);
+    void loadSavedWaypoints();
+    void saveWaypoints() const;
+    void rebuildSavedWaypoints();
     void stopGeoJsonDrag();
     void applyShadowSettingsToSceneRenderObjects();
     void updateForceSingleZoomAutoState();
@@ -431,6 +440,8 @@ private:
     GeoJsonController* geoJsonController_{nullptr};
     std::shared_ptr<BoatTrack> boatTrack_;
     std::shared_ptr<WaypointLayer> waypointLayer_;
+    QVector<QPair<double, double>> savedWaypoints_;
+    int selectedWaypointIndex_ = -1;
     std::shared_ptr<BottomTrack> m_bottomTrack;
     std::shared_ptr<PolygonGroup> m_polygonGroup;
     std::shared_ptr<PointGroup> m_pointGroup;

@@ -3490,6 +3490,9 @@ bool GraphicsScene3dView::selectWaypointAt(qreal x, qreal y)
     waypointLayer_->setSelectedIndex(closest);
     saveWaypoints();
     Q_EMIT selectedWaypointChanged();
+    const auto& waypoint = savedWaypoints_.at(closest);
+    Q_EMIT waypointSelectedForMission(waypoint.first, waypoint.second,
+                                      QStringLiteral("WP%1").arg(closest + 1));
     return true;
 }
 

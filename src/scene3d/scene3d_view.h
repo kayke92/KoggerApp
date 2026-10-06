@@ -383,6 +383,7 @@ signals:
     void forceSingleZoomAutoStateChanged(bool active);
     void syncLoupeStateChanged();
     void selectedWaypointChanged();
+    void waypointSelectedForMission(double latitude, double longitude, QString label);
     void verticalScaleChanged();
     void followReturnStateChanged();
 

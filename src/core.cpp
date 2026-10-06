@@ -2040,6 +2040,9 @@ void Core::UILoad(QObject* object, const QUrl& url)
     QObject::connect(deviceManagerWrapperPtr_->getWorker(), &DeviceManager::waypointRequested,
                      scene3dViewPtr_, &GraphicsScene3dView::addCarpcatcherWaypoint,
                      Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
+    QObject::connect(scene3dViewPtr_, &GraphicsScene3dView::waypointSelectedForMission,
+                     deviceManagerWrapperPtr_->getWorker(), &DeviceManager::uploadCarpcatcherWaypoint,
+                     Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
     syncLoupePlot3dPtr_.clear();
     const auto allPlots = object->findChildren<qPlot2D*>();
     for (auto* plot : allPlots) {

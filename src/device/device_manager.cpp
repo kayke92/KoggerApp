@@ -1,7 +1,9 @@
 #include "device_manager.h"
 #include <cmath>
+#include <cstring>
 #include "device_defs.h"
 #include <QDateTime>
+#include <QtEndian>
 #include "location_reader.h"
 #include "core.h"
 extern Core core;
@@ -65,6 +67,107 @@ int DeviceManager::pilotArmState()
 int DeviceManager::pilotModeState()
 {
     return vru_.flightMode;
+}
+
+FrameParser DeviceManager::makeMavlinkV1Frame(uint8_t messageId, const QByteArray& payload)
+{
+    QByteArray bytes;
+    bytes.resize(6 + payload.size() + 2);
+    auto* data = reinterpret_cast<uint8_t*>(bytes.data());
+    data[0] = 0xFE;
+    data[1] = static_cast<uint8_t>(payload.size());
+    data[2] = mavlinkTxSequence_++;
+    data[3] = 255; // Ground control station system id.
+    data[4] = 190; // MAV_COMP_ID_MISSIONPLANNER.
+    data[5] = messageId;
+    if (!payload.isEmpty()) {
+        std::memcpy(data + 6, payload.constData(), static_cast<size_t>(payload.size()));
+    }
+
+    uint16_t crc = CRC16_MCRF4XX(data + 1, static_cast<uint16_t>(5 + payload.size()), 0xFFFF);
+    uint8_t extra = getMAVLinkExtra(messageId);
+    crc = CRC16_MCRF4XX(&extra, 1, crc);
+    data[6 + payload.size()] = static_cast<uint8_t>(crc & 0xFF);
+    data[7 + payload.size()] = static_cast<uint8_t>(crc >> 8);
+
+    FrameParser frame;
+    frame.setContext(data, static_cast<uint32_t>(bytes.size()));
+    frame.process();
+    return frame;
+}
+
+void DeviceManager::sendMissionCount()
+{
+    if (!mavlinkLink_ || !missionUploadPending_ || mavlinkTargetSystem_ == 0) {
+        return;
+    }
+
+    QByteArray payload(4, '\0');
+    qToLittleEndian<quint16>(1, reinterpret_cast<uchar*>(payload.data()));
+    payload[2] = static_cast<char>(mavlinkTargetSystem_);
+    payload[3] = static_cast<char>(mavlinkTargetComponent_);
+    emit writeMavlinkFrame(makeMavlinkV1Frame(44, payload)); // MISSION_COUNT
+}
+
+void DeviceManager::sendMissionItemInt(uint16_t sequence)
+{
+    if (!mavlinkLink_ || !missionUploadPending_ || sequence != 0) {
+        return;
+    }
+
+    QByteArray payload(37, 0);
+    auto* data = reinterpret_cast<uchar*>(payload.data());
+    const float holdTime = 0.0f;
+    const float acceptanceRadius = 1.5f;
+    const float passRadius = 0.0f;
+    const float yaw = NAN;
+    const qint32 latitudeE7 = qRound64(missionLatitude_ * 1.0e7);
+    const qint32 longitudeE7 = qRound64(missionLongitude_ * 1.0e7);
+    const float altitude = 0.0f;
+
+    const auto writeFloat = [data](int offset, float value) {
+        quint32 bits = 0;
+        std::memcpy(&bits, &value, sizeof(bits));
+        qToLittleEndian<quint32>(bits, data + offset);
+    };
+    writeFloat(0, holdTime);
+    writeFloat(4, acceptanceRadius);
+    writeFloat(8, passRadius);
+    writeFloat(12, yaw);
+    qToLittleEndian<qint32>(latitudeE7, data + 16);
+    qToLittleEndian<qint32>(longitudeE7, data + 20);
+    writeFloat(24, altitude);
+    qToLittleEndian<quint16>(sequence, data + 28);
+    qToLittleEndian<quint16>(16, data + 30); // MAV_CMD_NAV_WAYPOINT
+    data[32] = mavlinkTargetSystem_;
+    data[33] = mavlinkTargetComponent_;
+    data[34] = 6; // MAV_FRAME_GLOBAL_RELATIVE_ALT_INT
+    data[35] = 0; // First item becomes current when AUTO starts.
+    data[36] = 1; // Continue automatically.
+    emit writeMavlinkFrame(makeMavlinkV1Frame(73, payload)); // MISSION_ITEM_INT
+}
+
+void DeviceManager::uploadCarpcatcherWaypoint(double latitude, double longitude, QString label)
+{
+    if (!std::isfinite(latitude) || !std::isfinite(longitude)) {
+        return;
+    }
+    if (!mavlinkLink_ || mavlinkTargetSystem_ == 0) {
+        core.consoleNotification(QStringLiteral("%1 niet verzonden: geen Pixhawk-verbinding").arg(label), true);
+        return;
+    }
+    if (vru_.armState == 1 && vru_.flightMode == 10) {
+        core.consoleNotification(
+            QStringLiteral("%1 niet gewijzigd: zet de boot eerst op MANUAL").arg(label), true);
+        return;
+    }
+
+    missionLatitude_ = latitude;
+    missionLongitude_ = longitude;
+    missionLabel_ = label;
+    missionUploadPending_ = true;
+    sendMissionCount();
+    core.consoleNotification(QStringLiteral("%1 wordt naar de Pixhawk verzonden").arg(label), false);
 }
 
 int DeviceManager::calcAverageChartLosses()
@@ -413,6 +516,8 @@ void DeviceManager::frameInput(QUuid uuid, Link* link, Parsers::FrameParser fram
 
                 if (mavlink_frame.msgId() == 0) { // SYS_STATUS
                     MAVLink_MSG_HEARTBEAT heartbeat = mavlink_frame.read<MAVLink_MSG_HEARTBEAT>();
+                    mavlinkTargetSystem_ = mavlink_frame.systemID();
+                    mavlinkTargetComponent_ = mavlink_frame.componentID();
                     vru_.armState = (int)heartbeat.isArmed();
                     int flight_mode = (int)heartbeat.customMode();
                     if (flight_mode != vru_.flightMode) {
@@ -422,6 +527,31 @@ void DeviceManager::frameInput(QUuid uuid, Link* link, Parsers::FrameParser fram
                     }
                     vru_.flightMode = flight_mode;
                     emit vruChanged();
+                }
+
+                if (mavlink_frame.msgId() == 40 || mavlink_frame.msgId() == 51) {
+                    const MAVLink_MSG_MISSION_REQUEST_BASE request =
+                        mavlink_frame.read<MAVLink_MSG_MISSION_REQUEST_BASE>();
+                    if (missionUploadPending_ && request.seq == 0) {
+                        sendMissionItemInt(request.seq);
+                    }
+                }
+
+                if (mavlink_frame.msgId() == 47) {
+                    const MAVLink_MSG_MISSION_ACK_BASE ack =
+                        mavlink_frame.read<MAVLink_MSG_MISSION_ACK_BASE>();
+                    if (missionUploadPending_) {
+                        missionUploadPending_ = false;
+                        if (ack.type == 0) {
+                            core.consoleNotification(
+                                QStringLiteral("%1 staat klaar als AUTO-missie").arg(missionLabel_), false);
+                        }
+                        else {
+                            core.consoleNotification(
+                                QStringLiteral("%1 geweigerd door Pixhawk (fout %2)")
+                                    .arg(missionLabel_).arg(ack.type), true);
+                        }
+                    }
                 }
 
                 if (mavlink_frame.msgId() == 147) { // BATTERY_STATUS
@@ -620,6 +750,10 @@ void DeviceManager::onLinkClosed(QUuid uuid, Link *link)
         otherProtocolStat_.remove(uuid);
         if(uuid == mavlinUuid_) {
             mavlinUuid_ = QUuid();
+            mavlinkLink_ = nullptr;
+            mavlinkTargetSystem_ = 0;
+            mavlinkTargetComponent_ = 0;
+            missionUploadPending_ = false;
         }
     }
 }
@@ -634,6 +768,10 @@ void DeviceManager::onLinkDeleted(QUuid uuid, Link *link)
         otherProtocolStat_.remove(uuid);
         if(uuid == mavlinUuid_) {
             mavlinUuid_ = QUuid();
+            mavlinkLink_ = nullptr;
+            mavlinkTargetSystem_ = 0;
+            mavlinkTargetComponent_ = 0;
+            missionUploadPending_ = false;
         }
     }
 }

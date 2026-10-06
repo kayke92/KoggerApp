@@ -651,6 +651,20 @@ struct __attribute__((packed)) MAVLink_MSG_HEARTBEAT
     uint32_t customMode() { return custom_mode; }
 };
 
+struct __attribute__((packed)) MAVLink_MSG_MISSION_REQUEST_BASE
+{
+    uint16_t seq;
+    uint8_t target_system;
+    uint8_t target_component;
+};
+
+struct __attribute__((packed)) MAVLink_MSG_MISSION_ACK_BASE
+{
+    uint8_t target_system;
+    uint8_t target_component;
+    uint8_t type;
+};
+
 struct __attribute__((packed)) MAVLink_MSG_SYS_STATUS
 {
     uint32_t onboard_control_sensors_present; // MAV_SYS_STATUS_SENSOR	Bitmap showing which onboard controllers and sensors are present. Value of 0: not present. Value of 1: present.

@@ -77,6 +77,7 @@ public slots:
     void onPositionUpdated(const QGeoPositionInfo& info);
 
     void setUseGPS(bool state);
+    void uploadCarpcatcherWaypoint(double latitude, double longitude, QString label);
 
 signals:
     void sendFrameInputToLogger(QUuid uuid, Link* link, Parsers::FrameParser frame);
@@ -207,6 +208,17 @@ private:
     double lastMavlinkLatitude_{ NAN };
     double lastMavlinkLongitude_{ NAN };
     bool waypointPitchReleased_{ true };
+    uint8_t mavlinkTxSequence_{ 0 };
+    uint8_t mavlinkTargetSystem_{ 0 };
+    uint8_t mavlinkTargetComponent_{ 0 };
+    double missionLatitude_{ NAN };
+    double missionLongitude_{ NAN };
+    QString missionLabel_;
+    bool missionUploadPending_{ false };
+
+    Parsers::FrameParser makeMavlinkV1Frame(uint8_t messageId, const QByteArray& payload);
+    void sendMissionCount();
+    void sendMissionItemInt(uint16_t sequence);
 
 private slots:
     void readyReadProxy(Link* link);

@@ -8,6 +8,7 @@ qt_add_qml_module(kogger_app
         AppSettingsPage.qml
         BasePanePopup.qml
         BottomTrackEditPopup.qml
+        CarpcatcherPanel.qml
         AimPanelSettingsTab.qml
         ConnectionsSettingsPage.qml
         ConsolePanelDrawer.qml

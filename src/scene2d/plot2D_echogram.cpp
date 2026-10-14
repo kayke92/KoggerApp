@@ -332,7 +332,8 @@ int Plot2DEchogram::updateCash(Plot2D* parent, Dataset* dataset, int width, int 
             cursor_pos += width;
         }
 
-        int pool_index = cursor.getIndex(cursor_pos);
+        // Display more sonar history across the same width at 2x/3x.
+        int pool_index = cursor.getIndex(cursor_pos * parent->echogramScrollSpeed());
         int pool_index_safe = dataset->validIndex(pool_index);
         if(pool_index_safe >= 0) {
 

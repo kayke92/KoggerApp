@@ -315,10 +315,10 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-    QCoreApplication::setOrganizationName("KOGGER");
-    QCoreApplication::setOrganizationDomain("kogger.tech");
-    QCoreApplication::setApplicationName("KoggerApp");
-    QCoreApplication::setApplicationVersion("1-1-1");
+    QCoreApplication::setOrganizationName("Carpcatcher");
+    QCoreApplication::setOrganizationDomain("carpcatcher.local");
+    QCoreApplication::setApplicationName("CarpcatcherControl");
+    QCoreApplication::setApplicationVersion("1.1.0");
 
     migrateSettingsSchema();
 

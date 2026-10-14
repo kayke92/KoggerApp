@@ -42,7 +42,7 @@ android {
      * Changing them manually might break the compilation!
      *******************************************************/
 
-    namespace = "org.kogger.koggerapp"
+    namespace = "nl.carpcatcher.control"
     compileSdkVersion androidCompileSdkVersion
     buildToolsVersion androidBuildToolsVersion
     ndkVersion = androidNdkVersion

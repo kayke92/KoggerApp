@@ -17,7 +17,7 @@ REM    adb on PATH is used first and overrides this.
 set "ANDROID_SDK=%ANDROID_SDK_ROOT%"
 
 REM 3) Application package id (from AndroidManifest / build).
-set "PKG=org.kogger.koggerapp"
+set "PKG=nl.carpcatcher.control"
 
 REM 4) Optional: force a specific device serial (see `adb devices`). Leave
 REM    empty to auto-pick the only device, or choose from a menu when several

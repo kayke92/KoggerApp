@@ -1,4 +1,4 @@
-package org.kogger.koggerapp;
+package nl.carpcatcher.control;
 
 public final class KoggerUsbId {
 

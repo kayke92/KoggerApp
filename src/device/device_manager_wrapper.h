@@ -58,6 +58,16 @@ public slots:
     Q_INVOKABLE void startStreamDownload(int id);
     Q_INVOKABLE void cancelStreamDownload(int id);
     Q_INVOKABLE void refreshStreamList();
+    Q_INVOKABLE bool requestPilotMode(int customMode) {
+#ifdef SEPARATE_READING
+        bool result = false;
+        QMetaObject::invokeMethod(getWorker(), "requestPilotMode", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(bool, result), Q_ARG(int, customMode));
+        return result;
+#else
+        return getWorker()->requestPilotMode(customMode);
+#endif
+    }
     void calcAverageChartLosses();
     void setProtoBinConsoled(bool state) {
         const bool changed = (protoBinConsoledState_ != state);

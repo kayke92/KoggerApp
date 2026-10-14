@@ -21,9 +21,39 @@ ApplicationWindow {
     minimumHeight: isMobilePlatform ? 0 : 560
     visible: true
     visibility: isMobilePlatform ? Window.FullScreen : Window.Windowed
-    title: (core.fileTitle !== "" ? (core.fileTitle + " — KoggerApp, KOGGER") : qsTr("KoggerApp, KOGGER"))
+    title: (core.fileTitle !== "" ? (core.fileTitle + " — Carpcatcher Control") : qsTr("Carpcatcher Control"))
            + appUtils.instanceSuffix
     onActiveChanged: if (active) root.lastActiveWindow = root
+
+    function applySonarSpeed(speed) {
+        var plot = root._activePlot2D()
+        if (plot)
+            plot.echogramScrollSpeed = speed
+        notifications.info(qsTr("Sonar image speed: %1×").arg(speed))
+    }
+
+    CarpcatcherPanel {
+        id: carpcatcherPanel
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 8
+        z: ZOrder.inputLockPanel + 20
+        onSonarSpeedRequested: function(speed) { root.applySonarSpeed(speed) }
+        onConnectSonarRequested: linkManagerWrapper.createAsTcp("10.42.1.1", 0, 5001)
+        onConnectCameraRequested: linkManagerWrapper.createAsRtsp("rtsp://10.42.1.1:8554/camera")
+        onModeRequested: function(mode) {
+            if (!telemetryAvailable) {
+                notifications.warning(qsTr("No Pixhawk telemetry connection."))
+                return
+            }
+            var modes = { "MANUAL": 0, "HOLD": 4, "AUTO": 10, "RTL": 11 }
+            if (deviceManagerWrapper.requestPilotMode(modes[mode]))
+                notifications.info(qsTr("Mode request sent: %1").arg(mode))
+            else
+                notifications.warning(qsTr("Mode request failed: %1").arg(mode))
+        }
+        Component.onCompleted: root.applySonarSpeed(sonarSpeed)
+    }
 
     WorkspaceStore {
         id: workspaceStore
@@ -99,7 +129,7 @@ ApplicationWindow {
         objectName: "secondaryAppWindow"
         width: 1080
         height: 540
-        title: (core.fileTitle !== "" ? core.fileTitle + " — KoggerApp, KOGGER" : qsTr("KoggerApp, KOGGER"))
+        title: (core.fileTitle !== "" ? core.fileTitle + " — Carpcatcher Control" : qsTr("Carpcatcher Control"))
                + qsTr(" — Second window") + appUtils.instanceSuffix
         visible: workspaceStore.secondaryWindowOpen
         onClosing: function(close) { workspaceStore.closeSecondaryWindow() }

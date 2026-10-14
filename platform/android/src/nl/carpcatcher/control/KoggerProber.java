@@ -1,6 +1,6 @@
-package org.kogger.koggerapp;
+package nl.carpcatcher.control;
 
-import org.kogger.koggerapp.KoggerUsbId;
+import nl.carpcatcher.control.KoggerUsbId;
 
 import com.hoho.android.usbserial.driver.ProbeTable;
 import com.hoho.android.usbserial.driver.UsbSerialProber;

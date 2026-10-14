@@ -17,6 +17,7 @@ class qPlot2D : public QQuickPaintedItem, public Plot2D
 public:
     // NOLINTBEGIN(bugprone-derived-method-shadowing-base-method): QML bridge intentionally re-exposes Plot2D methods as Q_INVOKABLE
     Q_PROPERTY(bool horizontal READ isHorizontal() WRITE setHorizontal NOTIFY plotHorizontalChanged)
+    Q_PROPERTY(int echogramScrollSpeed READ echogramScrollSpeed WRITE setEchogramScrollSpeedQml NOTIFY echogramScrollSpeedChanged)
     Q_PROPERTY(float timelinePosition READ timelinePosition WRITE setTimelinePosition NOTIFY timelinePositionChanged)
     Q_PROPERTY(float viewportRatio READ viewportRatio NOTIFY timelinePositionChanged)
     Q_PROPERTY(bool hasData READ hasData NOTIFY timelinePositionChanged)
@@ -65,6 +66,14 @@ public:
         _isHorizontal = is_horizontal;
         Plot2D::setHorizontal(_isHorizontal);
         Q_EMIT plotHorizontalChanged();
+        update();
+    }
+
+    void setEchogramScrollSpeedQml(int speed) {
+        const int bounded = qBound(1, speed, 3);
+        if (bounded == echogramScrollSpeed()) return;
+        Plot2D::setEchogramScrollSpeed(bounded);
+        Q_EMIT echogramScrollSpeedChanged();
         update();
     }
 
@@ -152,6 +161,7 @@ signals:
     void timelinePositionChanged();
     void contactChanged();
     void plotHorizontalChanged();
+    void echogramScrollSpeedChanged();
     void plotEnabledChanged();
 
 protected slots:

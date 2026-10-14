@@ -1,4 +1,4 @@
-package org.kogger.koggerapp;
+package nl.carpcatcher.control;
 
 import java.io.File;
 import java.util.List;
@@ -26,8 +26,8 @@ import org.qtproject.qt.android.bindings.QtActivity;
 
 public class KoggerActivity extends QtActivity {
     private static final String TAG = KoggerActivity.class.getSimpleName();
-    private static final String SCREEN_BRIGHT_WAKE_LOCK_TAG = "KoggerApp";
-    private static final String MULTICAST_LOCK_TAG = "KoggerApp";
+    private static final String SCREEN_BRIGHT_WAKE_LOCK_TAG = "CarpcatcherControl";
+    private static final String MULTICAST_LOCK_TAG = "CarpcatcherControl";
     private static final int STORAGE_PERMISSION_REQUEST_CODE = 1;
 
     private static KoggerActivity m_instance = null;

@@ -33,5 +33,5 @@ namespace AndroidInterface
     void setKeepScreenOn(bool on);
     void moveTaskToBack();
 
-    constexpr const char *kJniKoggerActivityClassName = "org/kogger/koggerapp/KoggerActivity";
+    constexpr const char *kJniKoggerActivityClassName = "nl/carpcatcher/control/KoggerActivity";
 };

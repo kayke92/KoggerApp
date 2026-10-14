@@ -69,6 +69,21 @@ int DeviceManager::pilotModeState()
     return vru_.flightMode;
 }
 
+bool DeviceManager::requestPilotMode(int customMode)
+{
+    if (!mavlinkLink_ || mavlinkTargetSystem_ == 0 || customMode < 0) {
+        return false;
+    }
+
+    QByteArray payload(6, '\0');
+    qToLittleEndian<quint32>(static_cast<quint32>(customMode),
+                             reinterpret_cast<uchar*>(payload.data()));
+    payload[4] = static_cast<char>(mavlinkTargetSystem_);
+    payload[5] = static_cast<char>(1); // MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
+    emit writeMavlinkFrame(makeMavlinkV1Frame(11, payload)); // SET_MODE
+    return true;
+}
+
 FrameParser DeviceManager::makeMavlinkV1Frame(uint8_t messageId, const QByteArray& payload)
 {
     QByteArray bytes;

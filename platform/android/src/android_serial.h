@@ -56,7 +56,7 @@ namespace AndroidSerial
     constexpr char CHAR_XON = 17;
     constexpr char CHAR_XOFF = 19;
 
-    constexpr const char *kJniUsbSerialManagerClassName = "org/kogger/koggerapp/KoggerUsbSerialManager";
+    constexpr const char *kJniUsbSerialManagerClassName = "nl/carpcatcher/control/KoggerUsbSerialManager";
 
     jclass getSerialManagerClass();
     void setNativeMethods();

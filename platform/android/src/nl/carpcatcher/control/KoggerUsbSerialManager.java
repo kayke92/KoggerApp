@@ -1,4 +1,4 @@
-package org.kogger.koggerapp;
+package nl.carpcatcher.control;
 
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothDevice;
@@ -17,7 +17,7 @@ import java.util.concurrent.*;
 
 public class KoggerUsbSerialManager {
     private static final String TAG = KoggerUsbSerialManager.class.getSimpleName();
-    private static final String ACTION_USB_PERMISSION = "org.kogger.koggerapp.action.USB_PERMISSION";
+    private static final String ACTION_USB_PERMISSION = "nl.carpcatcher.control.action.USB_PERMISSION";
     private static final int BAD_DEVICE_ID = 0;
     private static final int READ_BUF_SIZE = 2048;
 

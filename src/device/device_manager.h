@@ -29,6 +29,7 @@ public:
     Q_INVOKABLE float vruVelocityH();
     Q_INVOKABLE int pilotArmState();
     Q_INVOKABLE int pilotModeState();
+    Q_INVOKABLE bool requestPilotMode(int customMode);
     QList<DevQProperty*> getDevList();
     // True while any connected device has answered the stand probe. The stand panel kind is
     // hidden everywhere this is false, so it has to follow the devices rather than a snapshot.

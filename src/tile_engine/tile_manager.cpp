@@ -29,8 +29,8 @@ namespace map {
 
 TileManager::TileManager(QObject *parent) :
     QObject(parent),
-    providerId_(kGoogleProviderId),
-    tileProvider_(std::make_shared<TileGoogleProvider>()),
+    providerId_(kOsmProviderId),
+    tileProvider_(std::make_shared<TileOsmProvider>()),
     tileDownloader_(std::make_shared<TileDownloader>(tileProvider_, maxConcurrentDownloads_)),
     tileDB_(std::make_shared<TileDB>(providerId_)),
     tileSet_(std::make_shared<TileSet>(tileProvider_, tileDB_, tileDownloader_, maxTilesCapacity_, minTilesCapacity_)),

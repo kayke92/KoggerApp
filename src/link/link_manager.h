@@ -65,6 +65,7 @@ public slots:
     void createAsUdp(QString address, int sourcePort, int destinationPort);
     void createAsTcp(QString address, int sourcePort, int destinationPort);
     void createAsRtsp(QString address);
+    void ensureCarpcatcherDefaults();
     void openAsRtsp(QUuid uuid, QString address);
     void importPinnedLinksFromXML();
     void openFLinks();

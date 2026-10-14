@@ -45,6 +45,7 @@ public slots:
     void createAsTcp(QString address, int sourcePort, int destinationPort);
     void openAsTcp(QUuid uuid, QString address, int sourcePort, int destinationPort, LinkAttribute attribute = LinkAttribute::kLinkAttributeNone);
     void createAsRtsp(QString address);
+    void ensureCarpcatcherDefaults();
     void openAsRtsp(QUuid uuid, QString address);
     void closeLink(QUuid uuid);
     void closeFLink(QUuid uuid);
@@ -79,6 +80,7 @@ signals:
     void sendOpenAsUdp(QUuid uuid, QString address, int sourcePort, int destinationPort, LinkAttribute attribute = LinkAttribute::kLinkAttributeNone);
     void sendCreateAsTcp(QString address, int sourcePort, int destinationPort);
     void sendCreateAsRtsp(QString address);
+    void sendEnsureCarpcatcherDefaults();
     void sendOpenAsRtsp(QUuid uuid, QString address);
     void sendOpenAsTcp(QUuid uuid, QString address, int sourcePort, int destinationPort, LinkAttribute attribute = LinkAttribute::kLinkAttributeNone);
     void sendCloseLink(QUuid uuid);

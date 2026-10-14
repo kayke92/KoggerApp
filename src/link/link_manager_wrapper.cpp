@@ -26,6 +26,7 @@ LinkManagerWrapper::LinkManagerWrapper(QObject* parent) : QObject(parent)
     QObject::connect(this,                &LinkManagerWrapper::sendOpenAsUdp,               workerObject_.get(), &LinkManager::openAsUdp,                    connectionType);
     QObject::connect(this,                &LinkManagerWrapper::sendCreateAsTcp,             workerObject_.get(), &LinkManager::createAsTcp,                  connectionType);
     QObject::connect(this,                &LinkManagerWrapper::sendCreateAsRtsp,            workerObject_.get(), &LinkManager::createAsRtsp,                 connectionType);
+    QObject::connect(this,                &LinkManagerWrapper::sendEnsureCarpcatcherDefaults, workerObject_.get(), &LinkManager::ensureCarpcatcherDefaults,     connectionType);
     QObject::connect(this,                &LinkManagerWrapper::sendOpenAsRtsp,              workerObject_.get(), &LinkManager::openAsRtsp,                   connectionType);
     QObject::connect(this,                &LinkManagerWrapper::sendOpenAsTcp,               workerObject_.get(), &LinkManager::openAsTcp,                    connectionType);
     QObject::connect(this,                &LinkManagerWrapper::sendCloseLink,               workerObject_.get(), &LinkManager::closeLink,                    connectionType);
@@ -237,6 +238,11 @@ void LinkManagerWrapper::openAsTcp(QUuid uuid, QString address, int sourcePort, 
 void LinkManagerWrapper::createAsRtsp(QString address)
 {
     emit sendCreateAsRtsp(address);
+}
+
+void LinkManagerWrapper::ensureCarpcatcherDefaults()
+{
+    emit sendEnsureCarpcatcherDefaults();
 }
 
 void LinkManagerWrapper::openAsRtsp(QUuid uuid, QString address)

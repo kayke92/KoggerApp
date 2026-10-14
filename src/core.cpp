@@ -2632,7 +2632,7 @@ void Core::setActiveTransientUi(QObject* who)
 int Core::loadSavedMapTileProviderId() const
 {
     QSettings settings("KOGGER", "KoggerApp");
-    return settings.value("scene3d/map/TileProviderId", map::kGoogleProviderId).toInt();
+    return settings.value("scene3d/map/TileProviderId", map::kOsmProviderId).toInt();
 }
 
 void Core::onFileStopsOpening()
@@ -3204,6 +3204,11 @@ void Core::createMapTileManagerConnections()
 
     QObject::connect(scene3dViewPtr_, &GraphicsScene3dView::sendMapTextureIdByTileIndx, this, &Core::onSendMapTextureIdByTileIndx, Qt::DirectConnection);
 
+    QSettings mapSettings(QStringLiteral("KOGGER"), QStringLiteral("KoggerApp"));
+    if (!mapSettings.value(QStringLiteral("carpcatcher/offlineMapV1Enabled"), false).toBool()) {
+        mapSettings.setValue(QStringLiteral("scene3d/map/TileProviderId"), map::kOsmProviderId);
+        mapSettings.setValue(QStringLiteral("carpcatcher/offlineMapV1Enabled"), true);
+    }
     const int savedProvider = loadSavedMapTileProviderId();
     if (savedProvider != tileManager_->currentProviderId()) {
         tileManager_->setProvider(savedProvider);

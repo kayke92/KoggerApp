@@ -1031,6 +1031,38 @@ void LinkManager::createAsRtsp(QString address)
     emit linkCreatedInteractively(newLinkPtr->getUuid());
 }
 
+void LinkManager::ensureCarpcatcherDefaults()
+{
+    const TimerController timerGuard(timer_.get());
+    const QString sonarAddress = QStringLiteral("10.42.1.1");
+    const QString cameraAddress = QStringLiteral("rtsp://10.42.1.1:8554/camera");
+    bool hasSonar = false;
+    bool hasCamera = false;
+
+    for (const Link* link : std::as_const(list_)) {
+        if (!link) continue;
+        hasSonar = hasSonar || (link->getLinkType() == LinkType::kLinkIPTCP
+                               && link->getAddress() == sonarAddress
+                               && link->getDestinationPort() == 5001);
+        hasCamera = hasCamera || (link->getLinkType() == LinkType::kLinkRtsp
+                                 && link->getAddress() == cameraAddress);
+    }
+
+    if (!hasSonar) {
+        Link* link = createNewLink();
+        link->createAsTcp(sonarAddress, 0, 5001);
+        list_.append(link);
+        doEmitAppendModifyModel(link);
+    }
+    if (!hasCamera) {
+        Link* link = createNewLink();
+        link->createAsRtsp(cameraAddress);
+        list_.append(link);
+        doEmitAppendModifyModel(link);
+    }
+    exportPinnedLinksToXML();
+}
+
 void LinkManager::openAsRtsp(QUuid uuid, QString address)
 {
     const TimerController timerGuard(timer_.get());

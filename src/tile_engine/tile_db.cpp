@@ -6,6 +6,7 @@
 #include <QBuffer>
 #include <QDebug>
 #include <QThread>
+#include <QFile>
 
 #include "tile_provider_ids.h"
 
@@ -104,6 +105,17 @@ void TileDB::init()
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
     if (!dir.exists()) {
         dir.mkpath(".");
+    }
+
+    // Seed the OSM cache once. Afterwards the writable copy remains the user's
+    // persistent cache and can still receive newer tiles while internet exists.
+    if (providerId_ == kOsmProviderId && !QFile::exists(dbPath)) {
+        QFile bundled(QStringLiteral(":/offline/tiles_osm.db"));
+        if (bundled.exists()) {
+            bundled.copy(dbPath);
+            QFile::setPermissions(dbPath, QFileDevice::ReadOwner | QFileDevice::WriteOwner
+                                          | QFileDevice::ReadUser | QFileDevice::WriteUser);
+        }
     }
 
     closeDb();

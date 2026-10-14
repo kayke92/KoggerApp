@@ -42,7 +42,7 @@ ApplicationWindow {
         onConnectSonarRequested: linkManagerWrapper.createAsTcp("10.42.1.1", 0, 5001)
         onConnectCameraRequested: linkManagerWrapper.createAsRtsp("rtsp://10.42.1.1:8554/camera")
         onModeRequested: function(mode) {
-            if (!telemetryAvailable) {
+            if (!carpcatcherPanel.telemetryAvailable) {
                 notifications.warning(qsTr("No Pixhawk telemetry connection."))
                 return
             }
@@ -775,6 +775,7 @@ ApplicationWindow {
 
     Component.onDestruction: workspaceStore.saveLayoutState()
     Component.onCompleted: {
+        linkManagerWrapper.ensureCarpcatcherDefaults()
         // Применяем сохранённые глобальные настройки сразу при запуске
         if (theme) {
             theme.themeID          = startupSettings.appTheme

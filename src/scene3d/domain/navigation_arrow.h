@@ -26,6 +26,7 @@ public:
         QVector3D getPosition() const;
         float getAngle() const;
         int getSize() const;
+        bool isPositionValid() const;
 
     private:
         friend class NavigationArrow;
@@ -34,6 +35,7 @@ public:
         float angle_ = 0.0f;
         int size_ = 1;
         Shape shape_ = Shape::Arrow;
+        bool positionValid_ = false;
 
         QVector<QVector3D> arrowVertices_;
         QVector<QVector3D> arrowNormals_;

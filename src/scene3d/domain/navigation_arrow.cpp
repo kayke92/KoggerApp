@@ -31,6 +31,7 @@ void NavigationArrow::setPositionAndAngle(const QVector3D& position, float degAn
     if (std::isfinite(position.x()) &&
         std::isfinite(position.y())) {
         r->position_ = position;
+        r->positionValid_ = true;
     }
 
     if (std::isfinite(degAngle)) {
@@ -45,8 +46,14 @@ void NavigationArrow::resetPositionAndAngle()
     auto* r = RENDER_IMPL(NavigationArrow);
     r->position_ = QVector3D(0.0f, 0.0f, 0.0f);
     r->angle_ = 0.0f;
+    r->positionValid_ = false;
 
     Q_EMIT changed();
+}
+
+bool NavigationArrow::NavigationArrowRenderImplementation::isPositionValid() const
+{
+    return positionValid_;
 }
 
 void NavigationArrow::setSize(int size)

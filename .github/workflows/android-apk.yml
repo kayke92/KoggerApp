@@ -25,6 +25,20 @@ jobs:
           python3 -m pip install --user aqtinstall
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      - name: Restore bundled offline map
+        id: offline-map-cache
+        uses: actions/cache@v4
+        with:
+          path: resources/offline/tiles_osm.db
+          key: carpcatcher-offline-map-v1-${{ hashFiles('scripts/build_carpcatcher_offline_map.py') }}
+
+      - name: Build Netherlands and South Limburg offline map
+        if: steps.offline-map-cache.outputs.cache-hit != 'true'
+        run: |
+          python3 -m pip install --user pillow pyshp
+          python3 scripts/build_carpcatcher_offline_map.py
+          test -s resources/offline/tiles_osm.db
+
       - name: Install Qt 6.8.3 host tools
         run: |
           aqt install-qt linux desktop 6.8.3 linux_gcc_64 \

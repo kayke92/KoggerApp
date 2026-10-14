@@ -261,6 +261,7 @@ GraphicsScene3dView::GraphicsScene3dView() :
     positionsLiveTimer_->setInterval(3000);
     QObject::connect(positionsLiveTimer_, &QTimer::timeout, this, [this]() {
         positionsLive_ = false;
+        navigationArrow_->resetPositionAndAngle();
         if (followSuspended_) {
             cancelFollowReturn();
         }

@@ -330,7 +330,7 @@ void GraphicsScene3dRenderer::drawObjects()
         }
 
         //-----------Navigation arrow-------------
-        {
+        if (navigationArrowRenderImpl_.isPositionValid()) {
             glEnable(GL_DEPTH_TEST);
 
             QMatrix4x4 nModel;

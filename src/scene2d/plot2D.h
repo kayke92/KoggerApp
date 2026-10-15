@@ -77,7 +77,7 @@ public:
     float timelinePosition();
     void scrollPosition(int columns);
     int echogramScrollSpeed() const { return echogramScrollSpeed_; }
-    void setEchogramScrollSpeed(int speed) { echogramScrollSpeed_ = qBound(1, speed, 3); resetCash(); }
+    void setEchogramScrollSpeed(int speed) { echogramScrollSpeed_ = qBound(1, speed, 6); resetCash(); }
 
     void setDataChannel(bool fromGui, const ChannelId& channel, uint8_t subChannel1, const QString& portName1, const ChannelId& channel2 = channelNone(), uint8_t subChannel2 = 0, const QString& portName2 = QString());
 

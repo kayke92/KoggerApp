@@ -11,6 +11,7 @@ ApplicationWindow {
     readonly property bool isMobilePlatform: Qt.platform.os === "android" || Qt.platform.os === "ios"
 
     readonly property int deviceOrientation: Screen.orientation
+    property int appliedSonarSpeed: -1
 
     // OS-active window tracker for F11 routing (updated via onActiveChanged of both windows).
     property var lastActiveWindow: root
@@ -26,10 +27,30 @@ ApplicationWindow {
     onActiveChanged: if (active) root.lastActiveWindow = root
 
     function applySonarSpeed(speed) {
+        var effectiveSpeed = speed
+        if (speed === 0) {
+            var velocity = carpcatcherPanel.velocity
+            effectiveSpeed = isNaN(velocity)
+                    ? 1
+                    : Math.max(1, Math.min(6, Math.round(velocity / 0.20)))
+        }
         var plot = root._activePlot2D()
         if (plot)
-            plot.echogramScrollSpeed = speed
-        notifications.info(qsTr("Sonar image speed: %1×").arg(speed))
+            plot.echogramScrollSpeed = effectiveSpeed
+        if (root.appliedSonarSpeed !== effectiveSpeed) {
+            root.appliedSonarSpeed = effectiveSpeed
+            notifications.info(speed === 0
+                               ? qsTr("Sonar AUTO: %1×").arg(effectiveSpeed)
+                               : qsTr("Sonar image speed: %1×").arg(effectiveSpeed))
+        }
+    }
+
+    Timer {
+        interval: 500
+        running: carpcatcherPanel.sonarSpeed === 0
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.applySonarSpeed(0)
     }
 
     CarpcatcherPanel {

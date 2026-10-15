@@ -25,7 +25,7 @@ Rectangle {
     Settings {
         id: prefs
         category: "carpcatcher/control"
-        property int sonarSpeed: 1
+        property int sonarSpeed: 0
     }
 
     Row {
@@ -45,10 +45,10 @@ Rectangle {
 
         ComboBox {
             width: 92
-            model: ["1×", "2×", "3×"]
-            currentIndex: Math.max(0, prefs.sonarSpeed - 1)
+            model: ["AUTO", "1×", "2×", "3×"]
+            currentIndex: Math.max(0, Math.min(3, prefs.sonarSpeed))
             onActivated: {
-                prefs.sonarSpeed = currentIndex + 1
+                prefs.sonarSpeed = currentIndex
                 root.sonarSpeedRequested(prefs.sonarSpeed)
             }
             ToolTip.visible: hovered

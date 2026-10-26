@@ -678,7 +678,14 @@ void qPlot2D::onCursorMoved(int x, int y)
 void qPlot2D::timerUpdater() {
     if (!Plot2D::plotEnabled())
         return;
-    if (m_needUpdate) {
+
+    const bool liveSonarAnimation =
+        isVisible()
+        && datasetPtr_ != nullptr
+        && datasetPtr_->size() > 0
+        && timelinePosition() >= 0.999f;
+
+    if (m_needUpdate || liveSonarAnimation) {
         m_needUpdate = false;
         update();
     }

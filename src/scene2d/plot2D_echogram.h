@@ -2,6 +2,7 @@
 
 #include "plot2D_plot_layer.h"
 #include "plot2D_defs.h"
+#include <QElapsedTimer>
 
 class QPainter;
 class QPointF;
@@ -108,4 +109,10 @@ private:
     QSet<int> reRenderPlotIndxs_;
     MiniPreviewPlot2D* miniPreviewPlot_ = nullptr;
     bool wrapEnabled_ = true;
+
+    // Live sonar visual scroll interpolation.
+    // Sonar samples themselves are never interpolated or delayed.
+    QElapsedTimer smoothScrollTimer_;
+    qint64 smoothScrollPeriodMs_ = 100;
+    int smoothScrollEpoch_ = -1;
 };

@@ -481,8 +481,129 @@ bool Plot2DEchogram::draw(Plot2D* parent, Dataset* dataset)
 
         _flagColorChanged = false;
 
-        canvas.painter()->drawPixmap(0, 0, _pixmap, cash_position, 0, cash_width - cash_position, 0);
-        canvas.painter()->drawPixmap(cash_width - cash_position, 0, _pixmap, 0, 0, cash_position, 0);
+        // Smooth the visual motion between real sonar pings.
+        // The newest real ping is still shown immediately at the live edge.
+        // No sonar values are generated, averaged or delayed.
+        qreal remainingScroll = 0.0;
+
+        if (parent->timelinePosition() >= 0.999f && cash_width > 0) {
+            int latestPhysical = (cash_position + cash_width - 1) % cash_width;
+            int latestEpoch = _cash[latestPhysical].poolIndex;
+
+            // If the newest cache column contains no usable sonar epoch,
+            // find the most recent valid rendered sonar column.
+            if (latestEpoch < 0) {
+                const int maxBack = qMin(cash_width, 16);
+                for (int back = 1; back < maxBack; ++back) {
+                    latestPhysical =
+                        (latestPhysical - 1 + cash_width) % cash_width;
+                    latestEpoch = _cash[latestPhysical].poolIndex;
+
+                    if (latestEpoch >= 0)
+                        break;
+                }
+            }
+
+            if (latestEpoch >= 0) {
+                if (smoothScrollEpoch_ < 0) {
+                    smoothScrollEpoch_ = latestEpoch;
+                    smoothScrollTimer_.start();
+                }
+                else if (latestEpoch != smoothScrollEpoch_) {
+                    if (latestEpoch > smoothScrollEpoch_
+                            && smoothScrollTimer_.isValid()) {
+                        const int deltaEpoch =
+                            latestEpoch - smoothScrollEpoch_;
+                        const qint64 elapsed =
+                            smoothScrollTimer_.elapsed();
+                        const qint64 perPing =
+                            elapsed / qMax(1, deltaEpoch);
+
+                        // Ignore obviously invalid timing samples.
+                        if (perPing >= 30 && perPing <= 500)
+                            smoothScrollPeriodMs_ = perPing;
+                    }
+
+                    smoothScrollEpoch_ = latestEpoch;
+                    smoothScrollTimer_.restart();
+                }
+
+                if (smoothScrollTimer_.isValid()
+                        && smoothScrollPeriodMs_ > 0) {
+                    const qreal progress = qBound<qreal>(
+                        0.0,
+                        static_cast<qreal>(smoothScrollTimer_.elapsed())
+                            / static_cast<qreal>(smoothScrollPeriodMs_),
+                        1.0);
+
+                    remainingScroll =
+                        static_cast<qreal>(
+                            parent->echogramScrollSpeed())
+                        * (1.0 - progress);
+                }
+            }
+        }
+        else {
+            smoothScrollEpoch_ = -1;
+            smoothScrollTimer_.invalidate();
+        }
+
+        QPainter* outputPainter = canvas.painter();
+        outputPainter->save();
+        outputPainter->setClipRect(
+            QRectF(0.0, 0.0, cash_width, image_height));
+
+        // Only the visual transition uses sub-pixel interpolation.
+        // The cached sonar samples remain untouched.
+        outputPainter->setRenderHint(
+            QPainter::SmoothPixmapTransform, true);
+
+        const qreal firstWidth =
+            static_cast<qreal>(cash_width - cash_position);
+
+        if (firstWidth > 0.0) {
+            outputPainter->drawPixmap(
+                QRectF(remainingScroll, 0.0,
+                       firstWidth, image_height),
+                _pixmap,
+                QRectF(cash_position, 0.0,
+                       firstWidth, image_height));
+        }
+
+        if (cash_position > 0) {
+            outputPainter->drawPixmap(
+                QRectF(firstWidth + remainingScroll, 0.0,
+                       cash_position, image_height),
+                _pixmap,
+                QRectF(0.0, 0.0,
+                       cash_position, image_height));
+        }
+
+        if (remainingScroll > 0.001) {
+            // Fill only the far-left history gap created by interpolation.
+            const int oldestSourceX = cash_position;
+
+            outputPainter->drawPixmap(
+                QRectF(0.0, 0.0,
+                       remainingScroll, image_height),
+                _pixmap,
+                QRectF(oldestSourceX, 0.0,
+                       1.0, image_height));
+
+            // Always expose the newest REAL ping immediately at the
+            // right-hand live edge, even at the start of an animation.
+            const int newestSourceX =
+                (cash_position + cash_width - 1) % cash_width;
+
+            outputPainter->drawPixmap(
+                QRectF(cash_width - 1.0, 0.0,
+                       1.0, image_height),
+                _pixmap,
+                QRectF(newestSourceX, 0.0,
+                       1.0, image_height));
+        }
+
+        outputPainter->restore();
     } else {
         if (dataset == nullptr || !cursor.distance.isValid()) {
             releaseCache();

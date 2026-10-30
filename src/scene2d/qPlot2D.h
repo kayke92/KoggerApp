@@ -70,7 +70,7 @@ public:
     }
 
     void setEchogramScrollSpeedQml(int speed) {
-        const int bounded = qBound(1, speed, 3);
+        const int bounded = qBound(1, speed, 10);
         if (bounded == echogramScrollSpeed()) return;
         Plot2D::setEchogramScrollSpeed(bounded);
         Q_EMIT echogramScrollSpeedChanged();

@@ -1034,8 +1034,8 @@ void LinkManager::createAsRtsp(QString address)
 void LinkManager::ensureCarpcatcherDefaults()
 {
     const TimerController timerGuard(timer_.get());
-    const QString sonarAddress = QStringLiteral("10.42.1.1");
-    const QString cameraAddress = QStringLiteral("rtsp://10.42.1.1:8554/camera");
+    const QString sonarAddress = QStringLiteral("192.168.88.2");
+    const QString cameraAddress = QStringLiteral("rtsp://192.168.88.2:8554/camera");
     bool hasSonar = false;
     bool hasCamera = false;
 

@@ -45,10 +45,14 @@ Rectangle {
 
         ComboBox {
             width: 92
-            model: ["AUTO", "1×", "2×", "3×"]
-            currentIndex: Math.max(0, Math.min(3, prefs.sonarSpeed))
+            property var speedValues: [0, 1, 2, 3, 5, 8, 10]
+            model: ["AUTO", "1×", "2×", "3×", "5×", "8×", "10×"]
+            currentIndex: {
+                var idx = speedValues.indexOf(prefs.sonarSpeed)
+                return idx >= 0 ? idx : 0
+            }
             onActivated: {
-                prefs.sonarSpeed = currentIndex
+                prefs.sonarSpeed = speedValues[currentIndex]
                 root.sonarSpeedRequested(prefs.sonarSpeed)
             }
             ToolTip.visible: hovered

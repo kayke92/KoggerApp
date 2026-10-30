@@ -1340,14 +1340,24 @@ void Plot2D::reindexingCursor() {
         cursor_.indexes.resize(image_width);
     }
 
-    if(cursor_.last_dataset_size > 0) {
+    if(cursor_.last_dataset_size > 0 && data_width > 0) {
         float position = timelinePosition();
 
-        float last_head = round(position*cursor_.last_dataset_size);
-        float last_offset_head = float(cursor_.last_dataset_size) - last_head;
-        float new_head = data_width - last_offset_head;
+        // When the operator is effectively at the live edge, keep the
+        // echogram hard-pinned to the newest dataset. Do not preserve
+        // a small accumulated offset/lag.
+        if (position >= 0.97f) {
+            position = 1.0f;
+        } else {
+            // Deliberate history view: preserve the old distance
+            // from the live edge while new data arrives.
+            float last_head = round(position * cursor_.last_dataset_size);
+            float last_offset_head =
+                float(cursor_.last_dataset_size) - last_head;
+            float new_head = data_width - last_offset_head;
 
-        position = float(new_head)/float(data_width);
+            position = float(new_head) / float(data_width);
+        }
 
         setTimelinePosition(position);
     }

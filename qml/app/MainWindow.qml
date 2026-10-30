@@ -32,7 +32,7 @@ ApplicationWindow {
             var velocity = carpcatcherPanel.velocity
             effectiveSpeed = isNaN(velocity)
                     ? 1
-                    : Math.max(1, Math.min(6, Math.round(velocity / 0.20)))
+                    : Math.max(1, Math.min(10, Math.round(velocity / 0.10)))
         }
         var plot = root._activePlot2D()
         if (plot)
@@ -60,8 +60,8 @@ ApplicationWindow {
         anchors.bottomMargin: 8
         z: ZOrder.inputLockPanel + 20
         onSonarSpeedRequested: function(speed) { root.applySonarSpeed(speed) }
-        onConnectSonarRequested: linkManagerWrapper.createAsTcp("10.42.1.1", 0, 5001)
-        onConnectCameraRequested: linkManagerWrapper.createAsRtsp("rtsp://10.42.1.1:8554/camera")
+        onConnectSonarRequested: linkManagerWrapper.createAsTcp("192.168.88.2", 0, 5001)
+        onConnectCameraRequested: linkManagerWrapper.createAsRtsp("rtsp://192.168.88.2:8554/camera")
         onModeRequested: function(mode) {
             if (!carpcatcherPanel.telemetryAvailable) {
                 notifications.warning(qsTr("No Pixhawk telemetry connection."))

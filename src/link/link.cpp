@@ -156,6 +156,11 @@ void Link::updateTcpParameters(const QString& address, int sourcePort, int desti
 void Link::openAsTcp()
 {
     QTcpSocket *socketTcp = new QTcpSocket(this);
+
+    // Sonar is a low-latency realtime stream. Disable Nagle so small
+    // sonar packets are sent/processed without waiting for coalescing.
+    socketTcp->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+
     hostAddress_.setAddress(address_);
 
     QPointer<QTcpSocket> safeSock = socketTcp;

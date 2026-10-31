@@ -1039,11 +1039,19 @@ void LinkManager::ensureCarpcatcherDefaults()
     bool hasSonar = false;
     bool hasCamera = false;
 
-    for (const Link* link : std::as_const(list_)) {
+    for (Link* link : std::as_const(list_)) {
         if (!link) continue;
         hasSonar = hasSonar || (link->getLinkType() == LinkType::kLinkIPTCP
                                && link->getAddress() == sonarAddress
                                && link->getDestinationPort() == 5001);
+
+        // Existing Carpcatcher sonar links also reconnect automatically.
+        if (link->getLinkType() == LinkType::kLinkIPTCP
+                && link->getAddress() == sonarAddress
+                && link->getDestinationPort() == 5001
+                && link->getControlType() != ControlType::kAuto) {
+            link->setControlType(ControlType::kAuto);
+        }
         hasCamera = hasCamera || (link->getLinkType() == LinkType::kLinkRtsp
                                  && link->getAddress() == cameraAddress);
     }
@@ -1051,6 +1059,12 @@ void LinkManager::ensureCarpcatcherDefaults()
     if (!hasSonar) {
         Link* link = createNewLink();
         link->createAsTcp(sonarAddress, 0, 5001);
+
+        // Carpcatcher sonar is a permanent realtime link.
+        // Keep it in automatic mode so a short Wi-Fi/TCP interruption
+        // reconnects without operator intervention.
+        link->setControlType(ControlType::kAuto);
+
         list_.append(link);
         doEmitAppendModifyModel(link);
     }

@@ -294,12 +294,23 @@ int Plot2DEchogram::updateCash(Plot2D* parent, Dataset* dataset, int width, int 
     }
 
     int wrap_start_pos = 0;
-    if (wrapEnabled_) {
+
+    // At the live edge an incomplete history contains -1 entries on the left.
+    // Do not circularly wrap that empty history into the middle of the
+    // echogram. Keep missing history on the far left and live data on the
+    // right. Once enough real history exists, normal wrapping is preserved.
+    const bool incompleteLiveHistory =
+        parent->timelinePosition() >= 0.999f
+        && !cursor.indexes.empty()
+        && cursor.indexes.front() < 0;
+
+    if (wrapEnabled_ && !incompleteLiveHistory && width > 0) {
         wrap_start_pos = qAbs(cursor.getIndex(0) % width);
 
         for (unsigned int i = 0; i < cursor.indexes.size(); i++) {
             if (cursor.indexes[i] > 0) {
-                wrap_start_pos = qAbs((cursor.indexes[i] + (width - i)) % width);
+                wrap_start_pos =
+                    qAbs((cursor.indexes[i] + (width - i)) % width);
                 break;
             }
         }

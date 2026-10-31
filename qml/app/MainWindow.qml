@@ -11,7 +11,6 @@ ApplicationWindow {
     readonly property bool isMobilePlatform: Qt.platform.os === "android" || Qt.platform.os === "ios"
 
     readonly property int deviceOrientation: Screen.orientation
-    property int appliedSonarSpeed: -1
 
     // OS-active window tracker for F11 routing (updated via onActiveChanged of both windows).
     property var lastActiveWindow: root
@@ -26,32 +25,6 @@ ApplicationWindow {
            + appUtils.instanceSuffix
     onActiveChanged: if (active) root.lastActiveWindow = root
 
-    function applySonarSpeed(speed) {
-        var effectiveSpeed = speed
-        if (speed === 0) {
-            var velocity = carpcatcherPanel.velocity
-            effectiveSpeed = isNaN(velocity)
-                    ? 1
-                    : Math.max(1, Math.min(10, Math.round(velocity / 0.10)))
-        }
-        var plot = root._activePlot2D()
-        if (plot)
-            plot.echogramScrollSpeed = effectiveSpeed
-        if (root.appliedSonarSpeed !== effectiveSpeed) {
-            root.appliedSonarSpeed = effectiveSpeed
-            notifications.info(speed === 0
-                               ? qsTr("Sonar AUTO: %1×").arg(effectiveSpeed)
-                               : qsTr("Sonar image speed: %1×").arg(effectiveSpeed))
-        }
-    }
-
-    Timer {
-        interval: 500
-        running: carpcatcherPanel.sonarSpeed === 0
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.applySonarSpeed(0)
-    }
 
     CarpcatcherPanel {
         id: carpcatcherPanel
@@ -59,7 +32,6 @@ ApplicationWindow {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 8
         z: ZOrder.inputLockPanel + 20
-        onSonarSpeedRequested: function(speed) { root.applySonarSpeed(speed) }
         onConnectSonarRequested: linkManagerWrapper.createAsTcp("192.168.88.2", 0, 5001)
         onConnectCameraRequested: linkManagerWrapper.createAsRtsp("rtsp://192.168.88.2:8554/camera")
         onModeRequested: function(mode) {
@@ -73,7 +45,6 @@ ApplicationWindow {
             else
                 notifications.warning(qsTr("Mode request failed: %1").arg(mode))
         }
-        Component.onCompleted: root.applySonarSpeed(sonarSpeed)
     }
 
     WorkspaceStore {

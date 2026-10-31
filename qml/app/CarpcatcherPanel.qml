@@ -5,12 +5,10 @@ import kqml_types 1.0
 
 Rectangle {
     id: root
-    property int sonarSpeed: prefs.sonarSpeed
     property int activeMode: deviceManagerWrapper ? deviceManagerWrapper.pilotModeState : -1
     property real voltage: deviceManagerWrapper ? deviceManagerWrapper.vruVoltage : NaN
     property real velocity: deviceManagerWrapper ? deviceManagerWrapper.vruVelocityH : NaN
     property bool telemetryAvailable: activeMode >= 0
-    signal sonarSpeedRequested(int speed)
     signal modeRequested(string mode)
     signal connectSonarRequested()
     signal connectCameraRequested()
@@ -25,7 +23,6 @@ Rectangle {
     Settings {
         id: prefs
         category: "carpcatcher/control"
-        property int sonarSpeed: 0
     }
 
     Row {
@@ -43,21 +40,6 @@ Rectangle {
         Button { text: "SONAR"; onClicked: root.connectSonarRequested() }
         Button { text: "CAM"; onClicked: root.connectCameraRequested() }
 
-        ComboBox {
-            width: 92
-            property var speedValues: [0, 1, 2, 3, 5, 8, 10]
-            model: ["AUTO", "1×", "2×", "3×", "5×", "8×", "10×"]
-            currentIndex: {
-                var idx = speedValues.indexOf(prefs.sonarSpeed)
-                return idx >= 0 ? idx : 0
-            }
-            onActivated: {
-                prefs.sonarSpeed = speedValues[currentIndex]
-                root.sonarSpeedRequested(prefs.sonarSpeed)
-            }
-            ToolTip.visible: hovered
-            ToolTip.text: qsTr("Sonar image speed")
-        }
 
         Repeater {
             model: ["MANUAL", "HOLD", "AUTO"]

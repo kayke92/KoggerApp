@@ -39,8 +39,8 @@ namespace {
 
 constexpr int kMaxRetries = 5;
 constexpr int kRetryDelayMs = 2000;
-constexpr int kMaxFramesInFlight = 2;
-constexpr qint64 kMaxLagMs = 1000;
+constexpr int kMaxFramesInFlight = 1;
+constexpr qint64 kMaxLagMs = 250;
 constexpr qint64 kResyncTimeoutMs = 3000;
 constexpr qint64 kResyncClusterMs = 5000;
 constexpr int kResyncBurstToEscalate = 3;
@@ -296,8 +296,9 @@ void VideoStream::openStream()
         AVDictionary* opts = nullptr;
         av_dict_set(&opts, "rtsp_transport", "tcp", 0);
         av_dict_set(&opts, "timeout", kSocketTimeoutUs, 0);
-        av_dict_set(&opts, "max_delay", "200000", 0);
+        av_dict_set(&opts, "max_delay", "0", 0);
         av_dict_set(&opts, "fflags", "nobuffer", 0);
+        av_dict_set(&opts, "flags", "low_delay", 0);
         av_dict_set(&opts, "probesize", kProbeSize, 0);
         av_dict_set(&opts, "analyzeduration", kAnalyzeDurationUs, 0);
 
